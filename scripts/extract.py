@@ -105,22 +105,22 @@ def get_csv_data_row_count(local_path: str) -> int:
         return sum(1 for _ in reader)
 
 
+TABLE_SCHEMAS = {
+    "product_category_translation": [
+        bigquery.SchemaField("product_category_name",
+                             "STRING", mode="NULLABLE"),
+        bigquery.SchemaField("product_category_name_english",
+                             "STRING", mode="NULLABLE"),
+    ]
+}
+
+
 def load_gcs_to_bigquery(uri_list: list, dataset_id: str):
     """Loads GCS CSV URIs into explicitly mapped BigQuery tables."""
     client = bigquery.Client()
-
-    job_config = bigquery.LoadJobConfig(
-        source_format=bigquery.SourceFormat.CSV,
-        skip_leading_rows=1,
-        autodetect=True,
-        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
-        allow_quoted_newlines=True,
-    )
-
     for uri in uri_list:
         filename = uri.split("/")[-1]
         table_name = TABLE_MAPPING.get(filename)
-
         if not table_name:
             logger.critical(
                 f"Unmapped file detected: '{filename}'. Aborting execution to prevent data omission.")
@@ -128,14 +128,26 @@ def load_gcs_to_bigquery(uri_list: list, dataset_id: str):
                 f"Unmapped file detected: '{filename}'. Pipeline halted to prevent data omission."
             )
 
-        table_id = f"{client.project}.{dataset_id}.{table_name}"
+        explicit_schema = TABLE_SCHEMAS.get(table_name)
+        job_config_kwargs = {
+            "source_format": bigquery.SourceFormat.CSV,
+            "write_disposition": bigquery.WriteDisposition.WRITE_TRUNCATE,
+            "allow_quoted_newlines": True,
+        }
+        if explicit_schema is not None:
+            job_config_kwargs["autodetect"] = False
+            job_config_kwargs["schema"] = explicit_schema
+            job_config_kwargs["skip_leading_rows"] = 1
+        else:
+            job_config_kwargs["autodetect"] = True
 
+        job_config = bigquery.LoadJobConfig(**job_config_kwargs)
+        table_id = f"{client.project}.{dataset_id}.{table_name}"
         try:
             logger.info(
                 f"Starting BigQuery load job: {filename} -> {table_id}")
             job = client.load_table_from_uri(
-                uri, table_id, job_config=job_config
-            )
+                uri, table_id, job_config=job_config)
             job.result()
             logger.info(
                 f"Successfully loaded {job.output_rows} rows into {table_id}.")
