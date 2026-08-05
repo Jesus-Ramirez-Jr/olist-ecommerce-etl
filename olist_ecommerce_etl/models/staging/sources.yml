@@ -1,0 +1,87 @@
+version: 2
+
+sources:
+  - name: olist_ecommerce_raw
+    database: project-dfa4f4f5-3dca-462a-bfe
+    schema: olist_ecommerce_raw
+    description: "Raw data from Kaggle."
+
+    tables:
+      - name: customers
+        columns:
+          - name: customer_id
+          - name: customer_unique_id
+          - name: customer_zip_code_prefix
+          - name: customer_city
+          - name: customer_state
+      
+      - name: geolocation
+        columns:
+          - name: geolocation_zip_code_prefix
+          - name: geolocation_lat
+          - name: geolocation_lng
+          - name: geolocation_city
+          - name: geolocation_state
+
+      - name: order_items
+        columns:
+          - name: order_id
+          - name: order_item_id
+          - name: product_id
+          - name: seller_id
+          - name: shipping_limit_date
+          - name: price
+          - name: freight_value
+
+      - name: order_payments
+        columns:
+          - name: order_id
+          - name: payment_sequential
+          - name: payment_type
+          - name: payment_installments
+          - name: payment_value
+
+      - name: order_reviews
+        columns:
+          - name: review_id
+          - name: order_id
+          - name: review_score
+          - name: review_comment_title
+          - name: review_comment_message
+          - name: review_creation_date
+          - name: review_answer_timestamp
+
+      - name: orders
+        columns:
+          - name: order_id
+          - name: customer_id
+          - name: order_status
+          - name: order_purchase_timestamp
+          - name: order_approved_at
+          - name: order_delivered_carrier_date
+          - name: order_delivered_customer_date
+          - name: order_estimated_delivery_date
+
+      - name: product_category_translation
+        columns:
+          - name: product_category_name
+          - name: product_category_name_english
+
+      - name: products
+        columns:
+          - name: product_id
+          - name: product_category_name
+          - name: product_name_lenght
+          - name: product_description_lenght
+          - name: product_photos_qty
+          - name: product_weight_g
+          - name: product_length_cm
+          - name: product_height_cm
+          - name: product_width_cm
+
+      - name: sellers
+        columns:
+          - name: seller_id
+          - name: seller_zip_code_prefix
+          - name: seller_city
+          - name: seller_state
