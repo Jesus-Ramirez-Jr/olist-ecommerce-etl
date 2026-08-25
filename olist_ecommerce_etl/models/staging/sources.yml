@@ -1,49 +1,85 @@
 version: 2
-
 sources:
   - name: olist_ecommerce_raw
     database: project-dfa4f4f5-3dca-462a-bfe
     schema: olist_ecommerce_raw
-    description: "Raw data from Kaggle."
-
+    description: >
+      Raw, unmodified tables from the Olist Brazilian E-Commerce Public
+      Dataset (Kaggle), landed via GCS into BigQuery. No transformations
+      applied at this layer — source quirks are intentionally preserved
+      here and only cleaned up in staging.
     tables:
       - name: customers
+        description: >
+          One row per order-customer pairing, not one row per real-world
+          customer. Olist generates a new customer_id for every order a
+          person places — customer_unique_id is the actual stable identity
+          across orders. Never use customer_id to count or join on a
+          person; use customer_unique_id.
         columns:
           - name: customer_id
+            description: >
+              Order-scoped customer identifier — a single real customer
+              gets a different customer_id per order. Not a person-level key.
           - name: customer_unique_id
+            description: The actual stable identifier for a real customer across all their orders.
           - name: customer_zip_code_prefix
           - name: customer_city
           - name: customer_state
-      
+
       - name: geolocation
+        description: >
+          Zip-code-prefix-level lat/lng reference data. Grain is NOT one
+          row per zip_code_prefix — the same prefix can have multiple rows
+          with slightly different coordinates and even city/state spellings,
+          since this is crowd-sourced geocoding data, not an official registry.
         columns:
           - name: geolocation_zip_code_prefix
+            description: >
+              First 5 digits of a Brazilian zip code. Not unique in this
+              table — a single prefix maps to multiple lat/lng rows.
           - name: geolocation_lat
           - name: geolocation_lng
           - name: geolocation_city
           - name: geolocation_state
 
       - name: order_items
+        description: >
+          One row per line item within an order. Grain is the composite
+          of order_id and order_item_id, not order_id alone — an order
+          with 3 items has 3 rows here.
         columns:
           - name: order_id
           - name: order_item_id
+            description: Sequential line-item number scoped within a single order — not globally unique on its own.
           - name: product_id
           - name: seller_id
           - name: shipping_limit_date
+            description: Deadline for the seller to hand the item to the logistics partner.
           - name: price
           - name: freight_value
 
       - name: order_payments
+        description: >
+          One row per payment method applied to an order. An order can
+          have multiple rows if payment was split (e.g. voucher + credit
+          card) — grain is order_id plus payment_sequential, not order_id alone.
         columns:
           - name: order_id
           - name: payment_sequential
+            description: Sequence number of this payment method within the order, when multiple payment methods were used.
           - name: payment_type
           - name: payment_installments
           - name: payment_value
 
       - name: order_reviews
+        description: >
+          One row per review submitted. review_id is NOT unique on its
+          own in this raw table — see stg_order_reviews for the resolved
+          grain and surrogate key.
         columns:
           - name: review_id
+            description: Review identifier as provided by source — can repeat across multiple order_id values.
           - name: order_id
           - name: review_score
           - name: review_comment_title
@@ -52,10 +88,16 @@ sources:
           - name: review_answer_timestamp
 
       - name: orders
+        description: >
+          One row per order. Several date/timestamp columns are legitimately
+          null depending on order_status (e.g. order_delivered_customer_date
+          is null for orders that were canceled or never delivered) — that's
+          expected, not a data quality defect.
         columns:
           - name: order_id
           - name: customer_id
           - name: order_status
+            description: "Lifecycle state of the order (e.g. delivered, shipped, canceled, unavailable)."
           - name: order_purchase_timestamp
           - name: order_approved_at
           - name: order_delivered_carrier_date
@@ -63,16 +105,28 @@ sources:
           - name: order_estimated_delivery_date
 
       - name: product_category_translation
+        description: >
+          Lookup table translating Portuguese product_category_name values
+          to English. Known gap: not every product_category_name value that
+          appears in the products table has a matching row here — a left
+          join from products can produce nulls in product_category_name_english.
         columns:
           - name: product_category_name
           - name: product_category_name_english
 
       - name: products
+        description: >
+          One row per product. Note the source column names product_name_lenght
+          and product_description_lenght are misspelled ("lenght", not "length")
+          in the raw data itself — intentionally preserved here since this
+          layer documents the source as-is; staging is where that gets renamed.
         columns:
           - name: product_id
           - name: product_category_name
           - name: product_name_lenght
+            description: Character count of the product name. Column name is misspelled in the source system.
           - name: product_description_lenght
+            description: Character count of the product description. Column name is misspelled in the source system.
           - name: product_photos_qty
           - name: product_weight_g
           - name: product_length_cm
@@ -80,6 +134,7 @@ sources:
           - name: product_width_cm
 
       - name: sellers
+        description: One row per seller on the marketplace.
         columns:
           - name: seller_id
           - name: seller_zip_code_prefix
