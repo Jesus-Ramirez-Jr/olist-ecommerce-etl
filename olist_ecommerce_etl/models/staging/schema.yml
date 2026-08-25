@@ -1,0 +1,57 @@
+version: 2
+
+models:
+  - name: stg_order_reviews
+    description: >
+      Staging model for order reviews. One-to-one with the raw `order_reviews`
+      source table — renaming and casting only, no business logic.
+      Note: review_id is NOT guaranteed unique on its own; the same review_id
+      can appear against multiple order_ids in the source data. Use
+      surrogate_key (hashed from review_id + order_id) as the actual grain
+      of this model for any downstream joins or uniqueness checks.
+    columns:
+      - name: surrogate_key
+        description: >
+          Composite key hashed from review_id and order_id via
+          dbt_utils.generate_surrogate_key. This is the real primary key
+          of this model — review_id alone is not unique.
+        tests:
+          - unique
+
+      - name: review_id
+        description: >
+          Review identifier as provided by the source system. Not unique
+          on its own — see model-level description.
+        tests:
+          - not_null
+
+      - name: order_id
+        description: Foreign key to the order this review is associated with.
+        tests:
+          - not_null
+
+      - name: review_score
+        description: Customer satisfaction score provided by the source (integer scale).
+        tests:
+          - not_null
+
+      - name: review_comment_title
+        description: >
+          Free-text review title entered by the customer. Nullable by design —
+          many reviews have no title. No test applied; a not_null test here
+          would fail on legitimately valid rows.
+
+      - name: review_comment_message
+        description: >
+          Free-text review body entered by the customer. Nullable by design —
+          same reasoning as review_comment_title.
+
+      - name: review_creation_date
+        description: Date the review was submitted by the customer.
+        tests:
+          - not_null
+
+      - name: review_answer_timestamp
+        description: Timestamp when the seller/marketplace responded to the review.
+        tests:
+          - not_null
