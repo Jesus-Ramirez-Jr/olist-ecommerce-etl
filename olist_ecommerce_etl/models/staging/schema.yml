@@ -251,3 +251,24 @@ models:
       - name: geolocation_state
         tests:
           - not_null
+
+  - name: stg_product_category_translation
+    description: >
+      Staging model for product category name translations. One row per
+      category — product_category_name is the natural key and the column
+      stg_products actually joins on downstream; product_category_name_english
+      is a descriptive translation, not a join key, so it's tested for
+      not_null only even though it happens to be unique in this snapshot.
+    columns:
+      - name: product_category_name
+        description: >
+          Portuguese category name. The grain of this model and the
+          column downstream models join on.
+        tests:
+          - unique
+          - not_null
+
+      - name: product_category_name_english
+        description: English translation of the category name.
+        tests:
+          - not_null
