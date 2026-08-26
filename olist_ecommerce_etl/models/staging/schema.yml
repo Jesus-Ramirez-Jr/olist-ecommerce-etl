@@ -55,7 +55,7 @@ models:
         description: Timestamp when the seller/marketplace responded to the review.
         tests:
           - not_null
-          
+
   - name: stg_order_items
     description: >
       Staging model for order line items. Grain is the composite of
@@ -98,5 +98,42 @@ models:
           - not_null
 
       - name: freight_value
+        tests:
+          - not_null
+
+  - name: stg_order_payments
+    description: >
+      Staging model for order payments. Grain is the composite of
+      order_id and payment_sequential — an order paid via multiple
+      methods (e.g. voucher plus credit card) has multiple rows here.
+      Confirmed against live data: total row count equals distinct
+      (order_id, payment_sequential) pairs.
+    columns:
+      - name: surrogate_key
+        description: >
+          Composite key hashed from order_id and payment_sequential via
+          dbt_utils.generate_surrogate_key. This is the actual grain
+          of this model.
+        tests:
+          - unique
+
+      - name: order_id
+        tests:
+          - not_null
+
+      - name: payment_sequential
+        description: Sequence number of this payment method within the order, when multiple payment methods were used.
+        tests:
+          - not_null
+
+      - name: payment_type
+        tests:
+          - not_null
+
+      - name: payment_installments
+        tests:
+          - not_null
+
+      - name: payment_value
         tests:
           - not_null
