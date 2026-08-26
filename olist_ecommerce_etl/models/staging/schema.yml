@@ -170,3 +170,50 @@ models:
       - name: customer_state
         tests:
           - not_null
+
+  - name: stg_orders
+    description: >
+      Staging model for orders. One row per order — order_id is the
+      grain, confirmed unique against live data. order_approved_at,
+      order_delivered_carrier_date, and order_delivered_customer_date
+      are legitimately null depending on order_status (e.g. a canceled
+      order never gets approved or delivered); confirmed against live
+      null counts, not assumed.
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+
+      - name: customer_id
+        tests:
+          - not_null
+
+      - name: order_status
+        tests:
+          - not_null
+
+      - name: order_purchase_timestamp
+        tests:
+          - not_null
+
+      - name: order_approved_at
+        description: >
+          Timestamp the order was approved. Null for orders never
+          approved — confirmed 160 null rows in live data.
+
+      - name: order_delivered_carrier_date
+        description: >
+          Timestamp the order was handed to the logistics carrier. Null
+          for orders not yet shipped or canceled first — confirmed 1,783
+          null rows in live data.
+
+      - name: order_delivered_customer_date
+        description: >
+          Timestamp the order was delivered to the customer. Null for
+          orders not yet delivered, canceled, or lost — confirmed 2,965
+          null rows in live data.
+
+      - name: order_estimated_delivery_date
+        tests:
+          - not_null
