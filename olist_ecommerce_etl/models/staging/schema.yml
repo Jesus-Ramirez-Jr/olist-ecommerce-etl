@@ -137,3 +137,36 @@ models:
       - name: payment_value
         tests:
           - not_null
+
+  - name: stg_customers
+    description: >
+      Staging model for customers. One row per order-customer pairing,
+      matching the raw table's grain — customer_id is unique here, but
+      customer_unique_id is not (a real customer can place multiple
+      orders, each with a different customer_id). Do not deduplicate
+      this model to person-level; that's a downstream/mart concern.
+    columns:
+      - name: customer_id
+        description: Order-scoped customer identifier. The grain of this model.
+        tests:
+          - unique
+          - not_null
+
+      - name: customer_unique_id
+        description: >
+          The actual stable identity of a real customer across orders.
+          Not unique in this table by design — do not test it as such.
+        tests:
+          - not_null
+
+      - name: customer_zip_code_prefix
+        tests:
+          - not_null
+
+      - name: customer_city
+        tests:
+          - not_null
+
+      - name: customer_state
+        tests:
+          - not_null
