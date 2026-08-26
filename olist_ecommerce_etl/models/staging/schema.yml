@@ -55,3 +55,48 @@ models:
         description: Timestamp when the seller/marketplace responded to the review.
         tests:
           - not_null
+          
+  - name: stg_order_items
+    description: >
+      Staging model for order line items. Grain is the composite of
+      order_id and order_item_id — an order with multiple items has
+      multiple rows here. Confirmed against live data: total row count
+      equals distinct (order_id, order_item_id) pairs.
+    columns:
+      - name: surrogate_key
+        description: >
+          Composite key hashed from order_id and order_item_id via
+          dbt_utils.generate_surrogate_key. This is the actual grain
+          of this model.
+        tests:
+          - unique
+
+      - name: order_id
+        tests:
+          - not_null
+
+      - name: order_item_id
+        description: Sequential line-item number scoped within a single order.
+        tests:
+          - not_null
+
+      - name: product_id
+        tests:
+          - not_null
+
+      - name: seller_id
+        tests:
+          - not_null
+
+      - name: shipping_limit_date
+        description: Deadline for the seller to hand the item to the logistics partner.
+        tests:
+          - not_null
+
+      - name: price
+        tests:
+          - not_null
+
+      - name: freight_value
+        tests:
+          - not_null
