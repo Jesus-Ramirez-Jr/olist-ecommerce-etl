@@ -217,3 +217,37 @@ models:
       - name: order_estimated_delivery_date
         tests:
           - not_null
+
+  - name: stg_geolocation
+    description: >
+      Staging model for geolocation reference data. Raw grain preserved
+      as-is — this table has no unique key at all, not even at the
+      full-row level (exact duplicate rows exist in the source, and a
+      single zip_code_prefix maps to roughly 38 distinct lat/lng/city/
+      state combinations on average). Do not join downstream models to
+      this table on zip_code_prefix without first collapsing it to one
+      row per prefix — a naive join will fan out. That collapsing
+      strategy is a mart-layer decision, not handled here.
+    columns:
+      - name: geolocation_zip_code_prefix
+        description: >
+          Not unique in this table — many rows share the same prefix.
+          Do not test uniqueness on this column.
+        tests:
+          - not_null
+
+      - name: geolocation_lat
+        tests:
+          - not_null
+
+      - name: geolocation_lng
+        tests:
+          - not_null
+
+      - name: geolocation_city
+        tests:
+          - not_null
+
+      - name: geolocation_state
+        tests:
+          - not_null
