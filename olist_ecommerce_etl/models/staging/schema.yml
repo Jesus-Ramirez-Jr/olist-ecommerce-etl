@@ -272,3 +272,55 @@ models:
         description: English translation of the category name.
         tests:
           - not_null
+
+  - name: stg_products
+    description: >
+      Staging model for products. One row per product — product_id is
+      unique and matches the raw grain. product_category_name and three
+      other columns (product_name_length, product_description_length,
+      product_photos_qty) share the same 610 nulls, almost certainly the
+      same incomplete listings missing all four fields together; the four
+      physical dimension columns each have a small, separate 2-row null
+      gap. None of these are staging-layer problems — real nulls in the
+      source, passed through as-is. Renamed product_name_lenght and
+      product_description_lenght to correct spelling (raw source columns
+      are misspelled). product_category_name's coverage gap against
+      product_category_name_translation (portateis_cozinha_e_preparadores_de_alimentos,
+      pc_gamer, and null-category rows) is not handled here — that's a
+      mart-layer join concern.
+    columns:
+      - name: product_id
+        description: Unique identifier for a product. The grain of this model.
+        tests:
+          - unique
+          - not_null
+
+      - name: product_category_name
+        description: >
+          Portuguese category name. Not_null omitted — confirmed 610 real
+          nulls in the source (incomplete listings).
+
+      - name: product_name_length
+        description: >
+          Renamed from the raw product_name_lenght (misspelled in source).
+          Not_null omitted — confirmed 610 real nulls in the source.
+
+      - name: product_description_length
+        description: >
+          Renamed from the raw product_description_lenght (misspelled in
+          source). Not_null omitted — confirmed 610 real nulls in the source.
+
+      - name: product_photos_qty
+        description: Not_null omitted — confirmed 610 real nulls in the source.
+
+      - name: product_weight_g
+        description: Not_null omitted — confirmed 2 real nulls in the source.
+
+      - name: product_length_cm
+        description: Not_null omitted — confirmed 2 real nulls in the source.
+
+      - name: product_height_cm
+        description: Not_null omitted — confirmed 2 real nulls in the source.
+
+      - name: product_width_cm
+        description: Not_null omitted — confirmed 2 real nulls in the source.
