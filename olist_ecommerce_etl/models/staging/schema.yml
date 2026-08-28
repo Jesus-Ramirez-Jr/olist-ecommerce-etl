@@ -324,3 +324,27 @@ models:
 
       - name: product_width_cm
         description: Not_null omitted — confirmed 2 real nulls in the source.
+
+  - name: stg_sellers
+    description: >
+      Staging model for sellers. One row per seller — seller_id is
+      unique and matches the raw grain, no known quirks (confirmed by
+      profiling, not assumed from the stg_customers/stg_orders pattern).
+    columns:
+      - name: seller_id
+        description: Unique identifier for a seller. The grain of this model.
+        tests:
+          - unique
+          - not_null
+
+      - name: seller_zip_code_prefix
+        tests:
+          - not_null
+
+      - name: seller_city
+        tests:
+          - not_null
+
+      - name: seller_state
+        tests:
+          - not_null
