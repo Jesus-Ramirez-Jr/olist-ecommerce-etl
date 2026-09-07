@@ -33,3 +33,26 @@ models:
               arguments:
                 values: [1, 2, 3, 4, 5]
                 quote: false
+
+  - name: mart_customer_repeat_rate
+    description: >
+      One row per unique customer (customer_unique_id). Flags whether the
+      customer placed more than one order, and captures the state
+      associated with their first order. Note: repeat rates by state are
+      sensitive to sample size — states with small customer counts show
+      volatile rates and should be filtered (e.g. minimum ~1,000 customers)
+      before comparing across states.
+    columns:
+      - name: customer_unique_id
+        description: The true person-level customer identifier.
+        tests:
+          - unique
+          - not_null
+      - name: first_order_state
+        description: customer_state from the customer's earliest order by purchase timestamp.
+        tests:
+          - not_null
+      - name: reordered
+        description: True if the customer placed more than one order.
+        tests:
+          - not_null
