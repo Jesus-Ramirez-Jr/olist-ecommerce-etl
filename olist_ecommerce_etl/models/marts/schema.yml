@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: mart_first_order_retention
+    description: >
+      One row per unique customer (customer_unique_id). Built to answer:
+      is there a relationship between a customer's review score on their
+      first order and whether they ever order again? When a first order
+      received more than one review submission, the most recent response
+      (by review_answer_timestamp) is used.
+    columns:
+      - name: customer_unique_id
+        description: >
+          The true, person-level customer identifier (from stg_customers),
+          not the per-order customer_id. This is the grain key for the mart.
+        tests:
+          - unique
+          - not_null
+
+      - name: reordered
+        description: >
+          True if this customer placed more than one order across the
+          full order history, false if their first order was their only order.
+        tests:
+          - not_null
+
+      - name: first_order_review_score
+        description: >
+          The review score (1-5) left on the customer's first order.
+          Null when the customer never left a review on that order.
+        tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+                quote: false
