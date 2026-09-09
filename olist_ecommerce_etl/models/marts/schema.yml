@@ -56,3 +56,52 @@ models:
         description: True if the customer placed more than one order.
         tests:
           - not_null
+
+  - name: mart_time_between_orders
+    description: >
+      One row per customer (customer_unique_id) who has placed more than one
+      order. Captures the timestamps of the customer's first and second orders
+      and the number of days between them. Answers: among customers who
+      reorder, how much time typically passes between their first and second
+      order?
+
+    columns:
+      - name: customer_unique_id
+        description: >
+          The unique, person-level customer identifier (from stg_customers).
+          This is the grain of the mart.
+        tests:
+          - unique
+          - not_null
+
+      - name: first_order_id
+        description: order_id of the customer's first order, by order_purchase_timestamp.
+        tests:
+          - not_null
+
+      - name: first_order_timestamp
+        description: Timestamp of the customer's first order.
+        tests:
+          - not_null
+
+      - name: second_order_id
+        description: order_id of the customer's second order, by order_purchase_timestamp.
+        tests:
+          - not_null
+
+      - name: second_order_timestamp
+        description: Timestamp of the customer's second order.
+        tests:
+          - not_null
+
+      - name: days_between_orders
+        description: >
+          Number of calendar days between the customer's first and second
+          order, computed as TIMESTAMP_DIFF(second_order_timestamp,
+          first_order_timestamp, DAY). A value of 0 means both orders were
+          placed on the same calendar day.
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
