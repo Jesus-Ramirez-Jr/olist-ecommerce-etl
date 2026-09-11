@@ -105,3 +105,38 @@ models:
           - dbt_utils.expression_is_true:
               arguments:
                 expression: ">= 0"
+
+  - name: mart_category_revenue_and_volume
+    description: >
+      One row per product category (English translation where available, raw
+      Portuguese name where untranslated, 'uncategorized' where the product has
+      no category at all). Built from delivered orders only — canceled,
+      unavailable, and in-progress statuses (shipped, invoiced, processing,
+      approved) are excluded since this is a static historical extract and
+      those orders' final outcomes are unknown. Answers business question 4:
+      which categories drive the most revenue, and does that ranking hold up
+      by order volume instead.
+    columns:
+      - name: product_category_name_english
+        description: Product category grain key — English name, raw Portuguese fallback, or 'uncategorized'.
+        tests:
+          - unique
+          - not_null
+      - name: order_count
+        description: Distinct delivered orders containing at least one product in this category.
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+      - name: total_revenue
+        description: Sum of order item price for this category, delivered orders only.
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+      - name: revenue_rank
+        description: Category's rank by total_revenue, 1 = highest.
+      - name: order_count_rank
+        description: Category's rank by order_count, 1 = highest.
