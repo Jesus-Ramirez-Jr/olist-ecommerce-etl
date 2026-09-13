@@ -140,3 +140,59 @@ models:
         description: Category's rank by total_revenue, 1 = highest.
       - name: order_count_rank
         description: Category's rank by order_count, 1 = highest.
+
+  - name: mart_seller_performance
+    description: >
+      One row per seller with at least one delivered order. Revenue and order
+      count are only ever seller-attributable via order_items. On-time delivery
+      and review score are order-level facts in the source data, not seller-level —
+      when an order contains items from multiple sellers, every seller on that
+      order inherits the same delivered/estimated dates and the same review score.
+      meets_min_order_threshold (>=10 delivered orders) flags sellers with enough
+      order history for on_time_rate/avg_review_score to be treated as a reliable
+      rate rather than small-sample noise.
+    columns:
+      - name: seller_id
+        tests:
+          - unique
+          - not_null
+      - name: delivered_order_count
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 1"
+      - name: total_revenue
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+      - name: on_time_rate
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "between 0 and 1"
+      - name: avg_review_score
+        tests:
+          - dbt_utils.expression_is_true:
+              config:
+                where: "avg_review_score is not null"
+              arguments:
+                expression: "between 1 and 5"
+      - name: reviewed_order_count
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+      - name: meets_min_order_threshold
+        tests:
+          - not_null
+      - name: revenue_rank
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 1"
