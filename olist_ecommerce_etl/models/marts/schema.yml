@@ -196,3 +196,52 @@ models:
           - dbt_utils.expression_is_true:
               arguments:
                 expression: ">= 1"
+
+  - name: mart_delivery_time_review_score
+    description: >
+      One row per (order_id, product_category) pair, for delivered orders only. Built to
+      answer whether delivery time relates to review score, and whether that relationship
+      holds consistently across product categories. An order spanning multiple product
+      categories contributes one row per category — delivery_time_days and review_score are
+      order-level facts, so they repeat identically across every category row for that
+      order, the same known limitation as mart_seller_performance's shared-outcome fan-out.
+      8 delivered orders with a null order_delivered_customer_date (a source data-quality
+      gap, not a build defect) are excluded from the underlying population.
+    columns:
+      - name: order_id
+        description: >
+          The order this row's category is drawn from. Not unique on its own — an order
+          touching multiple product categories has one row per category.
+        tests:
+          - not_null
+      - name: product_category
+        description: >
+          Product category present on this order, resolved via coalesce(English translation,
+          raw Portuguese name, 'uncategorized') — the same fallback chain used in
+          mart_category_revenue_and_volume, so no order item is dropped for a missing
+          category or translation.
+        tests:
+          - not_null
+      - name: delivery_time_days
+        description: >
+          Elapsed calendar days between order_purchase_timestamp and
+          order_delivered_customer_date. Measures how long the customer actually waited —
+          not lateness relative to the estimated delivery date (that comparison lives in
+          mart_seller_performance's on_time_flag / avg_days_early).
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+      - name: review_score
+        description: >
+          The order's review score (1-5), deduplicated to the most recent submission per
+          order_id where multiple review rows exist for the same order. Null when the order
+          has no review.
+        tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+                quote: false
+              config:
+                where: "review_score is not null"
