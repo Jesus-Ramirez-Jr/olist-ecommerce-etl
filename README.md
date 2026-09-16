@@ -150,4 +150,4 @@ Adjust the `dbt_project.yml` / `profiles.yml` target (`dev`) and dataset (`olist
 ## Author
 
 **Jesus Ramirez (Jr)** — Data Analyst transitioning to Data Engineering.
-[LinkedIn] · [GitHub] · [Email]
+[LinkedIn](https://www.linkedin.com/in/jesus-s-ramirez-/) · [GitHub](https://github.com/Jesus-Ramirez-Jr) · [Email](jrsemails5@gmail.com)
